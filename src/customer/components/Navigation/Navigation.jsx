@@ -1,4 +1,4 @@
-import { Fragment, useEffect , useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Dialog, Popover, Tab, Transition } from "@headlessui/react";
 import {
   Bars3Icon,
@@ -11,6 +11,7 @@ import { Avatar, Button, Menu, MenuItem } from "@mui/material";
 import { deepPurple } from "@mui/material/colors";
 import { navigation } from "./navigationData";
 import logo from "../../../Logo/logo1.png";
+import { useNavigate } from "react-router-dom";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -18,7 +19,8 @@ function classNames(...classes) {
 
 export default function Navigation() {
   const [open, setOpen] = useState(false);
-  
+  const navigate = useNavigate()
+
   const [openAuthModal, setOpenAuthModal] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const openUserMenu = Boolean(anchorEl);
@@ -40,7 +42,7 @@ export default function Navigation() {
   };
 
   const handleCategoryClick = (category, section, item, close) => {
-    // navigate(`/${category.id}/${section.id}/${item.id}`);
+    navigate(`/${category.id}/${section.id}/${item.id}`);
     close();
   };
 
@@ -231,12 +233,12 @@ export default function Navigation() {
 
               {/* Logo */}
               <div className="ml-4 flex lg:ml-0">
-                  <span className="sr-only">Your Company</span>
-                  <img
-                    src={logo}
-                    alt="Shopwithzosh"
-                    className="h-10 w-10 mr-2"
-                  />
+                <span className="sr-only">Your Company</span>
+                <img
+                  src={logo}
+                  alt="Shopwithzosh"
+                  className="h-10 w-10 mr-2"
+                />
               </div>
 
               {/* Flyout menus */}
@@ -390,7 +392,7 @@ export default function Navigation() {
                       >
                         A
                       </Avatar>
-                     
+
                       <Menu
                         id="basic-menu"
                         anchorEl={anchorEl}
@@ -403,7 +405,13 @@ export default function Navigation() {
                         <MenuItem >
                           Profile
                         </MenuItem>
+                        
+                        <MenuItem onClick={()=> navigate('/account/order')}>
+                          My Orders
+                        </MenuItem>
+                        
                         <MenuItem>Logout</MenuItem>
+
                       </Menu>
                     </div>
                   ) : (
@@ -418,10 +426,10 @@ export default function Navigation() {
 
                 {/* Search */}
                 <div className="flex items-center lg:ml-6">
-                
+
                   <p className="p-2 text-gray-400 hover:text-gray-500">
                     <span className="sr-only">Search</span>
-                    
+
                     <MagnifyingGlassIcon
                       className="h-6 w-6"
                       aria-hidden="true"
@@ -441,7 +449,7 @@ export default function Navigation() {
                     <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">
 
 
-                    2   {/*bagitem */}
+                      2   {/*bagitem */}
                     </span>
                     <span className="sr-only">items in cart, view bag</span>
                   </Button>
