@@ -1,6 +1,8 @@
-import { Grid } from '@mui/material';
-import React from 'react';
+import { Grid, Typography, Paper } from '@mui/material';
+import React, { useEffect } from 'react';
 import OrderCart from './OrderCart';
+import { useDispatch, useSelector } from 'react-redux';
+import { getCart } from '../../State/Cart/Action';
 
 const orderStatus = [
     { label: "On The Way", value: "on_the_way" },
@@ -10,15 +12,31 @@ const orderStatus = [
 ];
 
 const Order = () => {
+    const dispatch = useDispatch();
+    const { cart, loading, error } = useSelector(state => state.cart);
+
+    useEffect(() => {
+        dispatch(getCart());
+    }, [dispatch]);
+
+    if (loading) return <p>Loading...</p>;
+    if (error) return <p>Error: {error}</p>;
+
     return (
         <div className='px-4 sm:px-6 lg:px-20 py-6'>
-            <Grid container spacing={2}>
-
+            <Typography variant="h4" align="center" gutterBottom>
+            Your Purchased Product's
+            </Typography>
+            <Grid container spacing={3}>
                 <Grid item xs={12} sm={4} md={3} lg={2.5}>
-                    <div className='h-auto shadow-lg bg-white p-4 md:p-5 sticky top-5'>
-                        <h1 className='font-bold text-lg md:text-xl'>Filter</h1>
-                        <div className='space-y-4 mt-6'>
-                            <h2 className='font-semibold text-base md:text-lg'>ORDER STATUS</h2>
+                    <Paper elevation={3} className='p-4'>
+                        <Typography variant="h6" gutterBottom>
+                            Filter Orders
+                        </Typography>
+                        <div className='space-y-4 mt-4'>
+                            <Typography variant="subtitle1" gutterBottom>
+                                ORDER STATUS
+                            </Typography>
                             {orderStatus.map((option) => (
                                 <div className='flex items-center' key={option.value}>
                                     <input
@@ -36,17 +54,22 @@ const Order = () => {
                                 </div>
                             ))}
                         </div>
-                    </div>
+                    </Paper>
                 </Grid>
 
                 <Grid item xs={12} sm={8} md={9} lg={9.5}>
                     <div className='space-y-6'>
-                        {[1, 1, 1, 1, 1].map((item, index) => (
-                            <OrderCart key={index} />
-                        ))}
+                        {cart?.cartItems?.length ? (
+                            cart.cartItems.map((item, index) => (
+                                <OrderCart key={index} item={item} />
+                            ))
+                        ) : (
+                            <Typography variant="body1" align="center">
+                                No items in cart.
+                            </Typography>
+                        )}
                     </div>
                 </Grid>
-
             </Grid>
         </div>
     );

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
     Dialog,
     DialogBackdrop,
@@ -16,11 +16,12 @@ import {
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { ChevronDownIcon, FunnelIcon, MinusIcon, PlusIcon, Squares2X2Icon } from '@heroicons/react/20/solid'
 import ProductCard from './ProductCard'
-import { mens_kurta } from '../../../Data/mens_kurta'
 import { filters, singleFilter } from './FilterData'
-import { FormControl, FormControlLabel, FormLabel, Radio, RadioGroup } from '@mui/material'
+import { FormControl, FormControlLabel, FormLabel, Pagination, Radio, RadioGroup } from '@mui/material'
 import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
+import { findProducts } from '../../State/Product/Action.js'
 
 const sortOptions = [
     // { name: 'Most Popular', href: '#', current: true },
@@ -36,8 +37,65 @@ function classNames(...classes) {
 
 export default function Product() {
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
-    const location = useLocation()
-    const navigate = useNavigate()
+    const location = useLocation();
+    const navigate = useNavigate();
+    const param = useParams()
+    const dispatch = useDispatch();
+    const {products} = useSelector(store => store)
+
+    const decodedQueryString = decodeURIComponent(location.search)
+    const searchParamms = new URLSearchParams(decodedQueryString)
+
+    const colorValue = searchParamms.get('color')
+    const sizeValue = searchParamms.get('size')
+    const priceValue = searchParamms.get('price')
+    const discount = searchParamms.get('discount')
+    const sortValue = searchParamms.get('sort')
+    const pageNumber = searchParamms.get('page') || 1 ; 
+    const stock = searchParamms.get('stock')
+
+    const handelPaginationChange=(event,value)=>{
+        const searchParamms = new URLSearchParams(location.search)
+        searchParamms.set("page",value)
+        const query = searchParamms.toString()
+        navigate({search:`?${query}`})
+
+    }
+
+
+    useEffect(()=>{
+
+        const [minPrice , maxPrice] = priceValue===null?[0,10000]:priceValue.split("-").map(Number);
+
+        const data = {
+            category: param.levelThree , 
+            colors: colorValue || [],
+            sizes: sizeValue || [],
+            minPrice , 
+            maxPrice , 
+            minDiscount: discount || 0 , 
+            sort: sortValue || "price_low",
+            pageNumber: pageNumber , 
+            pageSize: 12, 
+            stock: stock 
+        }
+
+        console.log('Request Data:', data);
+        dispatch(findProducts(data));
+
+    },[param.levelThree,
+        colorValue,
+        sizeValue,
+        priceValue,
+        discount,
+        sortValue,
+        pageNumber,
+        stock,
+        dispatch
+    ])
+
+
+    
 
     const handleFilter = (value, sectionId) => {
         const searchParams = new URLSearchParams(location.search)
@@ -49,7 +107,9 @@ export default function Product() {
 
             if (filterValue.length === 0) {
                 searchParams.delete(sectionId)
+                console.log("yes delete")
             }
+            console.log("includes: ", value, sectionId, filterValue)
         }
         else {
             filterValue.push(value)
@@ -71,6 +131,8 @@ export default function Product() {
         const query = searchParams.toString()
         navigate({ search: `${query}` })
     }
+
+
 
     return (
         <div className="bg-white">
@@ -143,7 +205,7 @@ export default function Product() {
                 </Dialog>
 
                 <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-baseline justify-between border-b border-gray-200 pb-6 pt-24">
+                    <div className="flex items-baseline justify-between border-b border-gray-200 pb-6 pt-19">
                         <h1 className="text-4xl font-bold tracking-tight text-gray-900">New Arrivals</h1>
 
                         <div className="flex items-center">
@@ -286,10 +348,16 @@ export default function Product() {
                             {/* Product grid */}
                             <div className="lg:col-span-4 w-full">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                                    {mens_kurta.map((item) => <ProductCard key={item.id} product={item} />)}
+                                    {products.products && products.products?.content?.map((item) => (<ProductCard product={item} />))}
                                 </div>
                             </div>
 
+                        </div>
+                    </section>
+
+                    <section className='w-full px=[3.6rem]'>
+                        <div className='px-4 py-5 flex justify-center'>
+                                    <Pagination count={products.products?.totalPages} onChange={handelPaginationChange} color='secondary' />
                         </div>
                     </section>
                 </main>

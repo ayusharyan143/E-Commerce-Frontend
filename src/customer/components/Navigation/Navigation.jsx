@@ -1,17 +1,15 @@
 import { Fragment, useEffect, useState } from "react";
 import { Dialog, Popover, Tab, Transition } from "@headlessui/react";
-import {
-  Bars3Icon,
-  MagnifyingGlassIcon,
-  ShoppingBagIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
-
+import { Bars3Icon, MagnifyingGlassIcon, ShoppingBagIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Avatar, Button, Menu, MenuItem } from "@mui/material";
 import { deepPurple } from "@mui/material/colors";
-import { navigation } from "./navigationData";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { getUser, logout } from "../../State/Auth/Action";
 import logo from "../../../Logo/logo1.png";
-import { useNavigate } from "react-router-dom";
+import AuthModel from "../../Auth/AuthModel";
+import { navigation } from "./navigationData";
+import { getCart } from "../../State/Cart/Action";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -19,39 +17,94 @@ function classNames(...classes) {
 
 export default function Navigation() {
   const [open, setOpen] = useState(false);
-  const navigate = useNavigate()
-
   const [openAuthModal, setOpenAuthModal] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const openUserMenu = Boolean(anchorEl);
-  const jwt = localStorage.getItem("jwt");
 
+  const jwt = localStorage.getItem("jwt");
+  const { auth } = useSelector((store) => store);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Fetch cart data on component mount
+  useEffect(() => {
+    dispatch(getCart());
+  }, [dispatch]);
+
+  const handleClick = () => {
+    navigate('/Cart');
+  };
+
+  useEffect(() => {
+    if (jwt) {
+      dispatch(getUser(jwt));
+    }
+  }, [jwt, dispatch]);
+
+  useEffect(() => {
+    if (auth.user) {
+      handleCloseAuthModal();
+    }
+    if (location.pathname === '/login') {
+      navigate(1);
+    }
+  }, [auth.user, location.pathname, navigate]);
 
   const handleUserClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
-  const handleCloseUserMenu = (event) => {
+
+  const handleCloseUserMenu = () => {
     setAnchorEl(null);
   };
 
-  const handleOpen = () => {
+  const handleOpenAuthModal = () => {
     setOpenAuthModal(true);
   };
-  const handleClose = () => {
+
+  const handleCloseAuthModal = () => {
     setOpenAuthModal(false);
   };
+
+  const handleLogout = () => {
+    dispatch(logout());
+    handleCloseUserMenu();
+  };
+
+
+  const handleMenuItemClick = (path) => {
+    navigate(path);
+    handleCloseUserMenu();
+};
+
 
   const handleCategoryClick = (category, section, item, close) => {
     navigate(`/${category.id}/${section.id}/${item.id}`);
     close();
   };
 
+  
+
+// const handleCategoryClick = (category, section, item, close) => {
+//   console.log('Navigating to:', `/${category.id}/${section.id}/${item.id}`);
+//   navigate(`/${category.id}/${section.id}/${item.id}`);
+//   close();
+// };
+
+
+
+  // const handleCategoryClick = (category, section, item, close) => {
+  //   navigate(item.href);
+  //   close();
+  // };
+
 
   return (
     <div className="bg-white pb-10">
       {/* Mobile menu */}
       <Transition.Root show={open} as={Fragment}>
-        <Dialog as="div" className="relative z-40 lg:hidden" onClose={setOpen}>
+        <Dialog as="div" className="relative z-40 lg:hidden" onClose={() => setOpen(false)}>
           <Transition.Child
             as={Fragment}
             enter="transition-opacity ease-linear duration-300"
@@ -86,7 +139,6 @@ export default function Navigation() {
                   </button>
                 </div>
 
-                {/* Links */}
                 <Tab.Group as="div" className="mt-2">
                   <div className="border-b border-gray-200">
                     <Tab.List className="-mb-px flex space-x-8 px-4">
@@ -109,16 +161,10 @@ export default function Navigation() {
                   </div>
                   <Tab.Panels as={Fragment}>
                     {navigation.categories.map((category) => (
-                      <Tab.Panel
-                        key={category.name}
-                        className="space-y-10 px-4 pb-8 pt-10"
-                      >
+                      <Tab.Panel key={category.name} className="space-y-10 px-4 pb-8 pt-10">
                         <div className="grid grid-cols-2 gap-x-4">
                           {category.featured.map((item) => (
-                            <div
-                              key={item.name}
-                              className="group relative text-sm"
-                            >
+                            <div key={item.name} className="group relative text-sm">
                               <div className="aspect-h-1 aspect-w-1 overflow-hidden rounded-lg bg-gray-100 group-hover:opacity-75">
                                 <img
                                   src={item.imageSrc}
@@ -130,10 +176,6 @@ export default function Navigation() {
                                 href={item.href}
                                 className="mt-6 block font-medium text-gray-900"
                               >
-                                <span
-                                  className="absolute inset-0 z-10"
-                                  aria-hidden="true"
-                                />
                                 {item.name}
                               </a>
                               <p aria-hidden="true" className="mt-1">
@@ -150,7 +192,6 @@ export default function Navigation() {
                             >
                               {section.name}
                             </p>
-                            {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}
                             <ul
                               role="list"
                               aria-labelledby={`${category.id}-${section.id}-heading-mobile`}
@@ -158,8 +199,13 @@ export default function Navigation() {
                             >
                               {section.items.map((item) => (
                                 <li key={item.name} className="flow-root">
-                                  <p className="-m-2 block p-2 text-gray-500">
-                                    {"item.name"}
+                                  <p
+                                    onClick={() =>
+                                      handleCategoryClick(category, section, item, () => setOpen(false))
+                                    }
+                                    className="-m-2 block p-2 text-gray-500 cursor-pointer hover:text-gray-800"
+                                  >
+                                    {item.name}
                                   </p>
                                 </li>
                               ))}
@@ -234,11 +280,13 @@ export default function Navigation() {
               {/* Logo */}
               <div className="ml-4 flex lg:ml-0">
                 <span className="sr-only">Your Company</span>
-                <img
-                  src={logo}
-                  alt="Shopwithzosh"
-                  className="h-10 w-10 mr-2"
-                />
+                <Link to="/">
+                  <img
+                    src={logo}
+                    alt="Shopwithzosh"
+                    className="h-10 w-10 mr-2 cursor-pointer"
+                  />
+                </Link>
               </div>
 
               {/* Flyout menus */}
@@ -271,21 +319,13 @@ export default function Navigation() {
                             leaveTo="opacity-0"
                           >
                             <Popover.Panel className="absolute inset-x-0 top-full text-sm text-gray-500">
-                              {/* Presentational element used to render the bottom shadow, if we put the shadow on the actual panel it pokes out the top, so we use this shorter element to hide the top of the shadow */}
-                              <div
-                                className="absolute inset-0 top-1/2 bg-white shadow"
-                                aria-hidden="true"
-                              />
-
+                              <div className="absolute inset-0 top-1/2 bg-white shadow" aria-hidden="true" />
                               <div className="relative bg-white">
                                 <div className="mx-auto max-w-7xl px-8">
                                   <div className="grid grid-cols-2 gap-x-8 gap-y-10 py-16">
                                     <div className="col-start-2 grid grid-cols-2 gap-x-8">
                                       {category.featured.map((item) => (
-                                        <div
-                                          key={item.name}
-                                          className="group relative text-base sm:text-sm"
-                                        >
+                                        <div key={item.name} className="group relative text-base sm:text-sm">
                                           <div className="aspect-h-1 aspect-w-1 overflow-hidden rounded-lg bg-gray-100 group-hover:opacity-75">
                                             <img
                                               src={item.imageSrc}
@@ -297,16 +337,9 @@ export default function Navigation() {
                                             href={item.href}
                                             className="mt-6 block font-medium text-gray-900"
                                           >
-                                            <span
-                                              className="absolute inset-0 z-10"
-                                              aria-hidden="true"
-                                            />
                                             {item.name}
                                           </a>
-                                          <p
-                                            aria-hidden="true"
-                                            className="mt-1"
-                                          >
+                                          <p aria-hidden="true" className="mt-1">
                                             Shop now
                                           </p>
                                         </div>
@@ -321,17 +354,13 @@ export default function Navigation() {
                                           >
                                             {section.name}
                                           </p>
-                                          {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}
                                           <ul
                                             role="list"
                                             aria-labelledby={`${section.name}-heading`}
                                             className="mt-6 space-y-6 sm:mt-4 sm:space-y-4"
                                           >
                                             {section.items.map((item) => (
-                                              <li
-                                                key={item.name}
-                                                className="flex"
-                                              >
+                                              <li key={item.name} className="flex">
                                                 <p
                                                   onClick={() =>
                                                     handleCategoryClick(
@@ -375,22 +404,21 @@ export default function Navigation() {
 
               <div className="ml-auto flex items-center">
                 <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:space-x-6">
-                  {true ? (
+                  {auth.user?.firstName ? (
                     <div>
                       <Avatar
                         className="text-white"
                         onClick={handleUserClick}
-                        aria-controls={open ? "basic-menu" : undefined}
+                        aria-controls={openUserMenu ? "basic-menu" : undefined}
                         aria-haspopup="true"
-                        aria-expanded={open ? "true" : undefined}
-                        // onClick={handleUserClick}
+                        aria-expanded={openUserMenu ? "true" : undefined}
                         sx={{
                           bgcolor: deepPurple[500],
                           color: "white",
                           cursor: "pointer",
                         }}
                       >
-                        A
+                        {auth.user.firstName[0].toUpperCase()}
                       </Avatar>
 
                       <Menu
@@ -402,54 +430,50 @@ export default function Navigation() {
                           "aria-labelledby": "basic-button",
                         }}
                       >
-                        <MenuItem >
+                        <MenuItem onClick={() => handleMenuItemClick('/')}>
+                          Home
+                        </MenuItem>
+                        <MenuItem onClick={() => handleMenuItemClick('/account/profile')}>
                           Profile
                         </MenuItem>
-                        
-                        <MenuItem onClick={()=> navigate('/account/order')}>
+                        <MenuItem onClick={() => handleMenuItemClick('/account/order')}>
                           My Orders
                         </MenuItem>
-                        
-                        <MenuItem>Logout</MenuItem>
-
+                        <MenuItem onClick={() => handleMenuItemClick('/Checkout?step=2')}>
+                          My Address
+                        </MenuItem>
+                        <MenuItem onClick={() => { handleLogout(); handleCloseUserMenu(); }}>
+                          Logout
+                        </MenuItem>
                       </Menu>
                     </div>
                   ) : (
                     <Button
-                      onClick={handleOpen}
+                      onClick={handleOpenAuthModal}
                       className="text-sm font-medium text-gray-700 hover:text-gray-800"
                     >
-                      Signin
+                      Sign In
                     </Button>
                   )}
                 </div>
 
                 {/* Search */}
                 <div className="flex items-center lg:ml-6">
-
                   <p className="p-2 text-gray-400 hover:text-gray-500">
                     <span className="sr-only">Search</span>
-
-                    <MagnifyingGlassIcon
-                      className="h-6 w-6"
-                      aria-hidden="true"
-                    />
+                    <MagnifyingGlassIcon className="h-6 w-6" aria-hidden="true" />
                   </p>
                 </div>
 
                 {/* Cart */}
                 <div className="ml-4 flow-root lg:ml-6">
-                  <Button
-                    className="group -m-2 flex items-center p-2"
-                  >
+                  <Button onClick={handleClick} className="group -m-2 flex items-center p-2">
                     <ShoppingBagIcon
                       className="h-6 w-6 flex-shrink-0 text-gray-400 group-hover:text-gray-500"
                       aria-hidden="true"
                     />
                     <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-800">
-
-
-                      2   {/*bagitem */}
+                      2 {/* Placeholder for cart items */}
                     </span>
                     <span className="sr-only">items in cart, view bag</span>
                   </Button>
@@ -459,6 +483,8 @@ export default function Navigation() {
           </div>
         </nav>
       </header>
+
+      <AuthModel handleClose={handleCloseAuthModal} open={openAuthModal} />
     </div>
   );
 }

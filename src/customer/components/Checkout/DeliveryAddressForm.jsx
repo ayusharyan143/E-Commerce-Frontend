@@ -1,8 +1,26 @@
+// DeliveryAddressForm.jsx
 import { Box, Button, Container, Grid, TextField } from '@mui/material';
 import React from 'react';
 import AddressCard from '../AddressCard/AddressCard';
+import { useDispatch, useSelector } from 'react-redux';
+import { createOrder } from '../../State/Order/Action';
+import { useNavigate } from 'react-router-dom';
 
 const DeliveryAddressForm = () => {
+
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const { auth } = useSelector(store => store);
+
+    console.log("Auth.user ", auth.user);
+
+    const handleDeliverHere = (address) => {
+        // Perform any action with the selected address
+        console.log("Selected Address for Delivery: ", address);
+
+        // Example: Dispatch an action to set the selected address in the state or directly create an order
+        dispatch(createOrder({ address, navigate }));
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -18,7 +36,13 @@ const DeliveryAddressForm = () => {
             mobile: data.get("phoneNumber"),
         };
 
-        console.log("address:", address);
+        console.log("order-Data", address);
+
+        const orderData = { address, navigate };
+
+        console.log("order-Data", orderData);
+
+        dispatch(createOrder(orderData));
     };
 
     return (
@@ -28,11 +52,14 @@ const DeliveryAddressForm = () => {
                 <Grid item xs={12} lg={5}>
                     <Box className='border rounded-md shadow-md h-[30.5rem] overflow-y-scroll p-5'>
                         <div className='border pb-5 p-4'>
-                            <AddressCard />
+                            { auth.user?.address.map((item, index) => 
+                                <AddressCard 
+                                    key={index} 
+                                    address={item} 
+                                    onDeliverHere={handleDeliverHere} 
+                                /> 
+                            )}
                         </div>
-                        <Button sx={{ mt: 3, bgcolor: "RGB(154 85 253)" }} size='large' variant='contained'>
-                            Deliver Here
-                        </Button>
                     </Box>
                 </Grid>
 
@@ -121,7 +148,12 @@ const DeliveryAddressForm = () => {
                                 </Grid>
 
                                 <Grid item xs={12}>
-                                    <Button sx={{ py: 1.5, mt: 1, bgcolor: "RGB(154 85 253)" }} size='large' variant='contained' type='submit'>
+                                    <Button 
+                                        sx={{ py: 1.5, mt: 1, bgcolor: "RGB(154 85 253)" }} 
+                                        size='large' 
+                                        variant='contained' 
+                                        type='submit'
+                                    >
                                         Submit Address
                                     </Button>
                                 </Grid>

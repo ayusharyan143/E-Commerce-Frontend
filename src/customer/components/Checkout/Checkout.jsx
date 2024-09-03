@@ -19,9 +19,9 @@ export default function Checkout() {
     const step = querySearch.get("step")
 
 
-    const handleNext = () => {
-        setActiveStep((prevActiveStep) => prevActiveStep + 1);
-    };
+    // const handleNext = () => {
+    //     setActiveStep((prevActiveStep) => prevActiveStep + 1);
+    // };
 
     const handleBack = () => {
         setActiveStep((prevActiveStep) => prevActiveStep - 1);
@@ -61,7 +61,7 @@ export default function Checkout() {
                             <Button
                                 color="inherit"
                                 disabled={activeStep === 0}
-                                onClick={handleBack}
+                                onClick={()=> handleBack()}
                                 sx={{ mr: 1 }}
                             >
                                 Back

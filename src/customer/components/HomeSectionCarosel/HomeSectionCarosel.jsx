@@ -13,7 +13,7 @@ const HomeSectionCarosel = ({data , sectionName}) => {
     const responsive = {
         0: { items: 1 },
         720: { items: 3 },
-        1024: { items: 5 },
+        1024: { items: 4 },
     };
 
     const slidePrev = () => {
@@ -46,7 +46,7 @@ const HomeSectionCarosel = ({data , sectionName}) => {
                 onSlideChanged={syncActiveIndex}
                 activeIndex={activeIndex}
                 autoPlay
-                autoPlayInterval={3000}
+                autoPlayInterval={5000}
                 infinite
             />
 
@@ -58,8 +58,8 @@ const HomeSectionCarosel = ({data , sectionName}) => {
                     onClick={slideNext}
                     sx={{
                         position: "absolute",
-                        top: "50%",
-                        right: "-1rem", // Adjusted spacing from the right edge
+                        top: "56.7%",
+                        right: "-0.1rem", // Adjusted spacing from the right edge
                         transform: "translateY(-50%)",
                         bgcolor: "white",
                         color: "black",
@@ -86,7 +86,7 @@ const HomeSectionCarosel = ({data , sectionName}) => {
                     className="carousel-button prev-button"
                     sx={{
                         position: "absolute",
-                        top: "50%",
+                        top: "55%",
                         left: "-1rem", // Adjusted spacing from the left edge
                         transform: "translateY(-50%)",
                         bgcolor: "white",

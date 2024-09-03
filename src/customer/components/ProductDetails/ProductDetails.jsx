@@ -1,13 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { StarIcon } from '@heroicons/react/20/solid'
 import { Radio, RadioGroup } from '@headlessui/react'
 import { Box, Button, Grid, LinearProgress, Rating } from '@mui/material'
 import ProductReviewCard from './ProductReviewCard'
-import { mens_kurta } from '../../../Data/mens_kurta'
+// import { mens_kurta } from '../../../Data/mens_kurta'
+
 import HomeSectionCard from '../HomeSectionCard/HomeSectionCard'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
+import { findProductsById } from '../../State/Product/Action'
+import { addItemToCart } from '../../State/Cart/Action'
+import { mens_kurta } from '../../../Data/Men/men_kurta'
 
 const product = {
     name: 'Basic Tee 6-Pack',
@@ -64,13 +69,26 @@ function classNames(...classes) {
 }
 
 export default function ProductDetails() {
-    const [selectedColor, setSelectedColor] = useState(product.colors[0])
-    const [selectedSize, setSelectedSize] = useState(product.sizes[2])
+    const [selectedSize, setSelectedSize] = useState("")
 
     const navigate = useNavigate()
+    const params = useParams();
+    const dispatch = useDispatch()
+    const { products } = useSelector(store => store)
 
-    const handleAddToCart = () => { navigate('/Cart')}
+    const handleAddToCart = () => { 
+        const data = {productId:params.productId,size:selectedSize.name}
+        console.log("Add Item To Cart Data P , S : " , data)
+        dispatch(addItemToCart(data))
+        navigate('/Cart')
+     }
 
+    useEffect(() => {
+
+        const data = { productId: params.productId }
+        dispatch(findProductsById(data))
+
+    }, [params.productId , dispatch])
     return (
         <div className="bg-white lg:px-20">
             <div className="pt-6">
@@ -108,8 +126,8 @@ export default function ProductDetails() {
                     <div className="flex flex-col items-center">
                         <div className="overflow-hidden rounded-lg w-full max-w-[30rem] max-h-[35rem]">
                             <img
-                                alt={product.images[0].alt}
-                                src={product.images[0].src}
+                                src={products.product?.imageUrl}
+                                alt={product.images[0].src}
                                 className="h-full w-full object-cover object-center"
                             />
                         </div>
@@ -127,11 +145,11 @@ export default function ProductDetails() {
                     </div>
 
                     {/* Product info */}
-                    <div className="lg:col-span-1 max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8 lg:pb-24">
+                    <div className="lg:col-span-1 max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8 lg:pb-19">
                         <div className="mb-6">
-                            <h1 className="text-lg lg:text-xl font-semibold text-gray-900">consecteturing</h1>
+                            <h1 className="text-lg lg:text-xl font-semibold text-gray-900">{products.product?.brand}</h1>
                             <h2 className='text-lg lg:text-xl text-gray-900 opacity-60 pt-1'>
-                                Lorem ipsum dolor sit amet consectetur adipisicing elit.
+                                {products.product?.title}
                             </h2>
                         </div>
 
@@ -140,9 +158,12 @@ export default function ProductDetails() {
                             <h2 className="sr-only">Product information</h2>
 
                             <div className='flex space-x-5 items-center text-lg lg:text-xl text-gray-900 mt-6'>
-                                <p className='font-semibold'>₹499</p>
-                                <p className='opacity-50 line-through'>₹1499</p>
-                                <p className='text-green-600 font-semibold'>66% off</p>
+                                <p className='font-semibold'>₹{products.product?.discountedPrice}</p>
+                                <p className='opacity-50 line-through'>₹{products.product?.price}</p>
+                                <p className='text-green-600 font-semibold'>
+                                    {((products.product?.price - products.product?.discountedPrice) / products.product?.price * 100).toFixed(1)}% off
+                                </p>
+
                             </div>
 
                             {/* Reviews */}
@@ -251,12 +272,12 @@ export default function ProductDetails() {
 
                 {/* Ratings and reviews */}
                 <section className="p-4 md:p-8">
-                    <h1 className='font-semibold text-lg md:text-xl pb-4'>Recent Reviews & Ratings</h1>
+                    <h1 className='font-semibold text-lg md:text-xl pb-6'>Recent Reviews & Ratings</h1>
                     <div className='border p-5 rounded-md'>
                         <Grid container spacing={4}>
                             {/* Product Ratings Section */}
                             <Grid item xs={12} md={5}>
-                                <h1 className='text-lg md:text-xl font-semibold pb-2'>Customer Ratings</h1>
+                                <h1 className='text-lg md:text-xl font-semibold pb-6'>Customer Ratings</h1>
                                 <div className='flex items-center space-x-3'>
                                     <Rating value={4.6} precision={0.5} readOnly />
                                     <p className='opacity-60'>7,45,99 Ratings</p>
@@ -282,7 +303,7 @@ export default function ProductDetails() {
 
                             {/* Product Reviews Section */}
                             <Grid item xs={12} md={7} className="pt-5 md:pt-0">
-                                <h1 className='text-lg md:text-xl font-semibold pb-5'>Customer Reviews</h1>
+                                <h1 className='text-lg md:text-xl font-semibold pb-7'>Customer Reviews</h1>
                                 <div className='space-y-5'>
                                     {[1, 1, 1].map((item, index) => <ProductReviewCard key={index} />)}
                                 </div>
@@ -292,8 +313,8 @@ export default function ProductDetails() {
                 </section>
 
                 {/* Similar Products */}
-                <section className='pt-10'>
-                    <h1 className='py-5 text-xl font-bold text-center'>Similar Products</h1>
+                <section className='pt-5'>
+                    <h1 className='mb-7 py-3 text-xl font-bold text-center'>Similar Products</h1>
                     <div className='flex flex-wrap gap-5 justify-center'>
                         {mens_kurta.slice(0, 16).map((item) => (
                             <HomeSectionCard key={item.id} product={item} />
